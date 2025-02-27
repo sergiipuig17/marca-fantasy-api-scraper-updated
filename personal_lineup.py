@@ -2,43 +2,32 @@ import json
 import logging
 import os
 import shutil
+from typing import List, Dict
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
-from concurrent.futures import ThreadPoolExecutor
+from config import HEADERS, URLS, BearerAuth, get_bearer_token
 
 LOG_FILE = "log.txt"
 HEADER_BEARER = ""
 RUTA_LIGAS = "mis_ligas/"
 REQUEST_TIMEOUT = 30
 
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-    'Origin': 'https://fantasy.laliga.com',
-    'Referer': 'https://fantasy.laliga.com/',
-    'X-App': 'Fantasy-web',
-    'X-Lang': 'es'
-}
-
-
-class BearerAuth(requests.auth.AuthBase):
-    def __init__(self, token):
-        self.token = token
-
-    def __call__(self, r):
-        r.headers["authorization"] = "Bearer " + self.token
-        return r
-
-
 def ask_league_id_bearer():
     global HEADER_BEARER
-    print("Introduce tu token (Para mas info visitar \n"
-          "https://github.com/alxgarci/marca-fantasy-api-scraper-updated )")
-    HEADER_BEARER = str(input("Bearer Header: ")).replace("'", "")
-    logging.info(f"Guardado Header '{HEADER_BEARER[0:12]}...'")
-
+    try:
+        HEADER_BEARER = get_bearer_token()
+        logging.info(f"Token cargado correctamente: '{HEADER_BEARER[0:12]}...'")
+    except Exception as e:
+        print("\nError al cargar el token desde .env:", str(e))
+        print("\nPuedes pegar el token manualmente:")
+        HEADER_BEARER = str(input("Bearer Token: ")).replace("'", "").strip()
+        if HEADER_BEARER.startswith("Bearer "):
+            HEADER_BEARER = HEADER_BEARER[7:]
+        logging.info(f"Token guardado manualmente: '{HEADER_BEARER[0:12]}...'")
 
 def read_leagues():
-    url = "https://api-fantasy.llt-services.com/api/v4/leagues"
+    url = URLS['leagues']
     league_ids_response = requests.get(url,
                                        auth=BearerAuth(HEADER_BEARER), headers=HEADERS, timeout=REQUEST_TIMEOUT)
     league_ids_payload = league_ids_response.json()
@@ -61,7 +50,7 @@ def main():
 
 
 def read_market(league_id):
-    url = f"https://api-fantasy.llt-services.com/api/v3/league/{league_id}/market"
+    url = f"{URLS['league_market']}/{league_id}/market"
     league_market_response = requests.get(url,
                                           auth=BearerAuth(HEADER_BEARER), timeout=REQUEST_TIMEOUT)
     league_market_payload = league_market_response.json()

@@ -9,26 +9,25 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import numpy as np
 import personal_lineup
+from config import HEADERS, URLS, BearerAuth, get_bearer_token
 
 import requests
 
 RUTA_DATA = "data/"
 RUTA_PLAYERS = "players/"
-PLAYERS_ENDPOINT = "https://api.laligafantasymarca.com/api/v3/player"
-MARKET_VALUE_ENDPOINT = "https://api.laligafantasymarca.com/api/v3/player/{0}/market-value"
 LOG_FILE = "log.txt"
 TOTAL_JUGADORES = 1900
 INDEX_INICIO_API = 52
 TEAMS_TO_WRITE = dict()
 REQUEST_TIMEOUT = 30
 
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-    'Origin': 'https://fantasy.laliga.com',
-    'Referer': 'https://fantasy.laliga.com/',
-    'X-App': 'Fantasy-web',
-    'X-Lang': 'es'
-}
+class BearerAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self.token = token
+
+    def __call__(self, r):
+        r.headers["authorization"] = "Bearer " + self.token
+        return r
 
 
 # Configuracion de argumentos por consola para mostrar INFO o PROGRESSBAR
@@ -163,14 +162,13 @@ def format_market_value(player_index, mkt_value_payload):
 
 def multithread_scrape_player_aux(player_index):
     try:
-        response = requests.get(f"{PLAYERS_ENDPOINT}/{player_index}", timeout=REQUEST_TIMEOUT, headers=HEADERS)
+        response = requests.get(f"{URLS['PLAYERS_ENDPOINT']}/{player_index}", timeout=REQUEST_TIMEOUT, headers=HEADERS, auth=BearerAuth(get_bearer_token()))
         if response.status_code == 200:
             payload = response.json()
             if payload["playerStatus"] != "out_of_league":
                 try:
                     _ = payload["team"]["id"]
-                    market_value_response = requests.get(MARKET_VALUE_ENDPOINT.format(player_index),
-                                                         timeout=REQUEST_TIMEOUT, headers=HEADERS)
+                    market_value_response = requests.get(f"{URLS['MARKET_VALUE_ENDPOINT']}/{player_index}/market-value", timeout=REQUEST_TIMEOUT, headers=HEADERS, auth=BearerAuth(get_bearer_token()))
                     market_value_payload = market_value_response.json()
 
                     to_player_json(player_index, payload, market_value_payload)
@@ -206,8 +204,8 @@ def main(p_bar, total_jugadores):
         if not os.path.exists(RUTA_PLAYERS):
             os.mkdir(RUTA_PLAYERS)
 
-        logging.info(f"API endpoint {PLAYERS_ENDPOINT}")
-        logging.info(f"API endpoint market-values {MARKET_VALUE_ENDPOINT.format('ID_JUGADOR')}")
+        logging.info(f"API endpoint {URLS['PLAYERS_ENDPOINT']}")
+        logging.info(f"API endpoint market-values {URLS['MARKET_VALUE_ENDPOINT'].format('ID_JUGADOR')}")
         start_time = time.time()
         if p_bar:
             print_progress_bar(0, total_jugadores, prefix='Progreso:', suffix='Jugadores obtenidos', length=70)
