@@ -7,8 +7,6 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 import logging
-import numpy as np
-import personal_lineup
 from config import HEADERS, URLS, BearerAuth, get_bearer_token
 
 import requests
@@ -20,15 +18,6 @@ TOTAL_JUGADORES = 1900
 INDEX_INICIO_API = 52
 TEAMS_TO_WRITE = dict()
 REQUEST_TIMEOUT = 30
-
-class BearerAuth(requests.auth.AuthBase):
-    def __init__(self, token):
-        self.token = token
-
-    def __call__(self, r):
-        r.headers["authorization"] = "Bearer " + self.token
-        return r
-
 
 # Configuracion de argumentos por consola para mostrar INFO o PROGRESSBAR
 def check_totaljugadores_provided(value):
@@ -70,7 +59,6 @@ def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, lengt
     filled_length = int(length * iteration // total)
     bar = fill * filled_length + '-' * (length - filled_length)
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=print_end)
-    # Print New Line on Complete
     if iteration == total:
         print()
 
@@ -110,7 +98,7 @@ def to_player_json(player_id, payload, mkt_value_payload):
 
 def format_player_stats(payload):
     # Jornada no disputada = NaN
-    player_stats = [np.nan for _ in range(0, 38)]
+    player_stats = [None for _ in range(0, 38)]
     for jornada in payload["playerStats"]:
         player_stats[jornada["weekNumber"] - 1] = jornada["totalPoints"]
     return player_stats
