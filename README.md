@@ -1,4 +1,4 @@
-## Actualmente no funciona el código, dado que han cambiado endpoints de la Api (ya no existe acceso web, solo en app)
+
 Se puede seguir la discusión en la pestaña 'issues' [#7](https://github.com/alxgarci/marca-fantasy-api-scraper-updated/issues/7)
 
 Acepto y reviso pull requests sin problema, para mantener el repositorio actualizado, pero por problemas de tiempo actuales iré investigando en ratos libres

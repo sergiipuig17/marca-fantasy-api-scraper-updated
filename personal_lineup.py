@@ -7,143 +7,71 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from config import HEADERS, URLS, BearerAuth, get_bearer_token
+import database
 
-LOG_FILE = "log.txt"
-HEADER_BEARER = ""
+log = logging.getLogger(__name__)
+
 RUTA_LIGAS = "mis_ligas/"
 REQUEST_TIMEOUT = 30
 
-def ask_league_id_bearer():
-    global HEADER_BEARER
+def get_league_id_and_token():
+    """Obtiene el ID de la primera liga del usuario y el token."""
     try:
-        HEADER_BEARER = get_bearer_token()
-        logging.info(f"Token cargado correctamente: '{HEADER_BEARER[0:12]}...'")
+        token = get_bearer_token()
+        log.info("Token cargado para obtener ID de liga.")
     except Exception as e:
-        print("\nError al cargar el token desde .env:", str(e))
-        print("\nPuedes pegar el token manualmente:")
-        HEADER_BEARER = str(input("Bearer Token: ")).replace("'", "").strip()
-        if HEADER_BEARER.startswith("Bearer "):
-            HEADER_BEARER = HEADER_BEARER[7:]
-        logging.info(f"Token guardado manualmente: '{HEADER_BEARER[0:12]}...'")
+        log.error(f"No se pudo cargar el token. Error: {e}", exc_info=True)
+        raise
 
-def read_leagues():
     url = URLS['leagues']
-    league_ids_response = requests.get(url,
-                                       auth=BearerAuth(HEADER_BEARER), headers=HEADERS, timeout=REQUEST_TIMEOUT)
-    league_ids_payload = league_ids_response.json()
-    logging.info(f"Request {url} OK")
-    league_ids = []
-    for x in league_ids_payload:
-        league_ids.append(x["id"])
-
-    return league_ids
-
+    try:
+        response = requests.get(url, auth=BearerAuth(token), headers=HEADERS, timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+        # LA API DEVUELVE UNA LISTA DIRECTAMENTE
+        leagues_list = response.json()
+        
+        if not leagues_list:
+            log.warning("La respuesta de la API de ligas no contiene datos o está vacía.")
+            return None, None
+        
+        # Asumimos la primera liga de la lista
+        league_id = leagues_list[0]['id']
+        log.info(f"ID de liga principal encontrado: {league_id}")
+        return league_id, token
+    except requests.exceptions.RequestException as e:
+        log.error(f"Error de red al obtener el ID de la liga: {e}", exc_info=True)
+        raise
+    except (KeyError, IndexError) as e:
+        log.error(f"Error en los datos al procesar el ID de la liga: {e}", exc_info=True)
+        raise
 
 def main():
-    remove_files()
-    create_base_dirs()
-    ask_league_id_bearer()
-    league_ids = read_leagues()
-    for league_id in league_ids:
-        read_market(league_id)
-        read_players(league_id)
+    """Función principal para el scraping de mercado."""
+    log.info("Iniciando el proceso principal de scraping de personal_lineup.")
+    database.init_db()
+    
+    try:
+        league_id, token = get_league_id_and_token()
+        if not league_id:
+            return []
+        
+        market_players = read_market(league_id, token)
+        return market_players
+    except Exception as e:
+        log.error(f"Fallo en la ejecución principal de personal_lineup: {e}", exc_info=True)
+        return []
 
-
-def read_market(league_id):
+def read_market(league_id, token):
+    """Lee los datos del mercado y los actualiza en la base de datos."""
     url = f"{URLS['league_market']}/{league_id}/market"
-    league_market_response = requests.get(url,
-                                          auth=BearerAuth(HEADER_BEARER), timeout=REQUEST_TIMEOUT)
-    league_market_payload = league_market_response.json()
-    logging.info(f"Request {url} OK")
-    write_json_ligas(league_market_payload, league_id)
-
-
-def write_json_ligas(content, league_id):
-    directory = f"{RUTA_LIGAS}{league_id}/"
-    if not os.path.exists(directory):
-        try:
-            # Solucionar errores multithreading cuando dos hilos intentan crear un directorio simultaneamente
-            os.mkdir(directory)
-        except FileExistsError:
-            logging.error(f"Error creando {directory} (Ya se ha creado)")
-            pass
-
-    filename = "market.json"
-    with open(directory + filename, "w", encoding="utf-8") as f:
-        json.dump(content, f, indent=4)
-
-    logging.info(f"{directory}{filename} escrito correctamente")
-
-
-def write_json_player_team(player_team_payload, league_id):
-    directory = f"{RUTA_LIGAS}{league_id}/"
-    if not os.path.exists(directory):
-        try:
-            # Solucionar errores multithreading cuando dos hilos intentan crear un directorio simultaneamente
-            os.mkdir(directory)
-        except FileExistsError:
-            logging.error(f"Error creando {directory} (Ya se ha creado)")
-            pass
-
-    filename = f"{player_team_payload['manager']['id']}_{player_team_payload['manager']['managerName']}.json"
-    with open(directory + filename, "w", encoding="utf-8") as f:
-        json.dump(player_team_payload, f, indent=4)
-    logging.info(f"{directory}{filename} escrito correctamente")
-
-
-def get_player_team(player_id, league_id):
-    url = f"https://api-fantasy.llt-services.com/api/v3/leagues/{league_id}/teams/{player_id}"
-    player_team_response = requests.get(
-        url,
-        auth=BearerAuth(HEADER_BEARER), timeout=REQUEST_TIMEOUT)
-    player_team_payload = player_team_response.json()
-    logging.info(f"Request {url} OK")
-    write_json_player_team(player_team_payload, league_id)
-
-
-def read_players(league_id):
-    url = f"https://api-fantasy.llt-services.com/api/v4/leagues/{league_id}/ranking?x-lang=es"
-    league_players_response = requests.get(
-        url,
-        auth=BearerAuth(HEADER_BEARER), timeout=REQUEST_TIMEOUT)
-    league_players_payload = league_players_response.json()
-    logging.info(f"Request {url} OK")
-    player_ids = []
-    for player in league_players_payload:
-        player_ids.append(player["team"]["id"])
-    args = ((p, league_id) for p in player_ids)
-    logging.info(f"Iniciando multithread para liga {league_id}")
-    with ThreadPoolExecutor() as executor:
-        for _ in executor.map(lambda p: get_player_team(*p), args):
-            pass
-
-
-def create_base_dirs():
-    if not os.path.exists(RUTA_LIGAS):
-        try:
-            # Solucionar errores multithreading cuando dos hilos intentan crear un directorio simultaneamente
-            os.mkdir(RUTA_LIGAS)
-        except FileExistsError:
-            logging.error(f"Error creando {RUTA_LIGAS} (Ya se ha creado)")
-            pass
-
-
-def remove_files():
-    logging.info(f"Eliminando anteriores archivos ({RUTA_LIGAS})")
-    if os.path.exists(RUTA_LIGAS):
-        shutil.rmtree(RUTA_LIGAS)
-
-
-if __name__ == '__main__':
-    logging.basicConfig(filename=LOG_FILE, format="[%(asctime)s.%(msecs)03d] %(levelname)s - %(message)s",
-                        datefmt="%H:%M:%S", level=logging.INFO, filemode="w")
-    console = logging.StreamHandler()
-    formatter = logging.Formatter(fmt="[%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
-    console.setFormatter(formatter)
-    console.setLevel(logging.INFO)
-    logging.getLogger("").addHandler(console)
-    logger = logging.getLogger(__name__)
-    main()
-
-else:
-    logger = logging.getLogger(__name__)
+    log.info(f"Accediendo al mercado con URL: {url}")
+    
+    try:
+        response = requests.get(url, auth=BearerAuth(token), timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+        market_payload = response.json()
+        log.info("Datos del mercado obtenidos correctamente de la API.")
+        return database.update_market_data(market_payload)
+    except requests.exceptions.RequestException as e:
+        log.error(f"Error de red al obtener los datos del mercado: {e}", exc_info=True)
+        return []

@@ -1,4 +1,5 @@
 import os
+import requests
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde .env
@@ -21,16 +22,14 @@ URLS = {
     'player_stats': f"{API_BASE_URL}/v3/player",  # Necesita /{id} al final
     'market_value': f"{API_BASE_URL}/v3/player",  # Necesita /{id}/market-value al final
     'league_market': f"{API_BASE_URL}/v3/league",  # Necesita /{id}/market al final
+    'league_ranking': f"{API_BASE_URL}/v3/league",  # Necesita /{id}/ranking al final
     'player_offers': f"{API_BASE_URL}/v4/league",  # Necesita /{league_id}/playerTeam/{player_id}/offer al final
     'league_news': f"{API_BASE_URL}/v3/leagues",  # Necesita /{id}/news/{page} al final
 }
 
 # Headers comunes
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-    'Origin': 'https://fantasy.laliga.com',
-    'Referer': 'https://fantasy.laliga.com/',
-    'X-App': 'Fantasy-web',
+    'User-Agent': 'LaLigaFantasy/9.9.1 (com.lfp.laligafantasy; build:5; iOS 18.3.2) Alamofire/5.10.2',
     'X-Lang': API_LANG
 }
 
