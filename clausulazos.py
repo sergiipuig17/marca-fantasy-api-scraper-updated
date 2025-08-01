@@ -49,17 +49,26 @@ def get_all_players_with_clause():
         market_response = requests.get(market_url, auth=auth, headers=config.HEADERS)
         market_response.raise_for_status()
         
-        market_data = market_response.json().get('data', {})
-        players_on_market = market_data.get('sales', [])
+        market_response_json = market_response.json()
+        if isinstance(market_response_json, list):
+            players_on_market = market_response_json
+        elif isinstance(market_response_json, dict):
+            players_on_market = market_response_json.get('sales', [])
+        else:
+            players_on_market = []
+            log.warning(f"Unexpected response format from market API: {market_response_json}")
+        log.info(f"Players on market (sales): {players_on_market}")
         log.info(f"Encontrados {len(players_on_market)} jugadores en el mercado de fichajes.")
 
-        players_with_clause_count = 0
+        filtered_players_data = []
         for player_data in players_on_market:
-            if player_data.get('type') == 'clause':
-                players_with_clause_count += 1
-                player_info = player_data.get('player', {})
+            team_name = player_data.get('playerMaster', {}).get('team', {}).get('name')
+            log.info("Processing player...")
+            # Exclude players from "Pushita Alemany"
+            if team_name != 'Pushita Alemany':
+                player_info = player_data.get('playerMaster', {})
                 if not player_info:
-                    log.warning(f"Jugador en mercado de cláusulas sin datos de jugador: {player_data}")
+                    log.warning(f"Jugador en mercado sin datos de jugador: {player_data}")
                     continue
                 
                 player_id = player_info.get('id')
@@ -73,9 +82,9 @@ def get_all_players_with_clause():
                 if end_protection_str:
                     end_protection_date = datetime.fromisoformat(end_protection_str.replace('Z', '+00:00'))
                     time_diff = end_protection_date - datetime.now(end_protection_date.tzinfo)
-                    time_remaining_seconds = max(0, int(time_diff.total_seconds()))
+                    time_remaining_seconds = int(time_diff.total_seconds()) # Removed max(0, ...) as it might affect sorting if negative times are valid
 
-                all_players_with_clause.append({
+                filtered_players_data.append({
                     'id': player_id,
                     'name': player_info.get('nickname', 'N/A'),
                     'team_name': player_info.get('team', {}).get('name', 'N/A'),
@@ -87,10 +96,15 @@ def get_all_players_with_clause():
                     'market_value': player_info.get('marketValue'),
                     'player_points': player_info.get('points', 0),
                     'market_value_trend': trend,
-                    'time_remaining_seconds': time_remaining_seconds
+                    'time_remaining_seconds': time_remaining_seconds,
+                    'expirationDate': end_protection_str # Keep original for potential sorting if needed
                 })
         
-        log.info(f"Procesados {players_with_clause_count} jugadores con cláusula.")
+        # Sort players by time_remaining_seconds (earliest first)
+        filtered_players_data.sort(key=lambda x: x['time_remaining_seconds'])
+        
+        all_players_with_clause = filtered_players_data
+        log.info(f"Procesados {len(all_players_with_clause)} jugadores (excluyendo 'Pushita Alemany').")
 
     except requests.exceptions.RequestException as e:
         log.error(f"Error de red al obtener jugadores con cláusula: {e}", exc_info=True)
