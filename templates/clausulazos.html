@@ -51,9 +51,10 @@
         .player-card.hidden { display: none; }
         .player-card img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--header-color); background-color: #4a5568; }
         .player-info { flex-grow: 1; }
-        .player-info .player-name { font-size: 1.25rem; font-weight: 700; }
-        .player-info .team-name { font-size: 0.9rem; color: var(--subtle-text); }
-        .player-info .owner-name { font-size: 0.9rem; color: var(--subtle-text); font-style: italic; }
+                 .player-info .player-name { font-size: 1.25rem; font-weight: 700; }
+         .player-info .team-name { font-size: 0.9rem; color: var(--subtle-text); }
+         .player-info .owner-name { font-size: 0.9rem; color: var(--subtle-text); font-style: italic; }
+         .player-info .position-name { font-size: 0.8rem; color: var(--header-color); font-weight: 600; text-transform: uppercase; }
         .player-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1.5rem; text-align: right; min-width: 280px; }
         .detail .label { font-size: 0.8rem; color: var(--subtle-text); }
         .detail .value { font-size: 1rem; font-weight: 600; }
@@ -84,9 +85,10 @@
         <div class="filters-section">
             <div class="filter-container">
                 <strong>Ordenar por:</strong>
-                <a href="{{ url_for('clausulazos_page', sort='time_remaining_asc') }}" class="filter-button {% if sort_by == 'time_remaining_asc' %}active{% endif %}">Más Cercanos</a>
-                <a href="{{ url_for('clausulazos_page', sort='buyout_clause_desc') }}" class="filter-button {% if sort_by == 'buyout_clause_desc' %}active{% endif %}">Mayor Cláusula</a>
-                <a href="{{ url_for('clausulazos_page', sort='buyout_clause_asc') }}" class="filter-button {% if sort_by == 'buyout_clause_asc' %}active{% endif %}">Menor Cláusula</a>
+                                 <a href="{{ url_for('clausulazos_page', sort='time_remaining_asc') }}" class="filter-button {% if sort_by == 'time_remaining_asc' %}active{% endif %}">Más Cercanos</a>
+                 <a href="{{ url_for('clausulazos_page', sort='buyout_clause_desc') }}" class="filter-button {% if sort_by == 'buyout_clause_desc' %}active{% endif %}">Mayor Cláusula</a>
+                 <a href="{{ url_for('clausulazos_page', sort='buyout_clause_asc') }}" class="filter-button {% if sort_by == 'buyout_clause_asc' %}active{% endif %}">Menor Cláusula</a>
+                 <a href="{{ url_for('clausulazos_page', sort='position_asc') }}" class="filter-button {% if sort_by == 'position_asc' %}active{% endif %}">Por Clase</a>
             </div>
             
             {% if owners %}
@@ -108,35 +110,54 @@
             {% for player in players %}
             <div class="player-card" data-owner="{{ player.owner }}">
                 <img src="{{ player.image_url }}" alt="{{ player.name }}">
-                <div class="player-info">
-                    <div class="player-name">{{ player.name }}</div>
-                    <div class="team-name">{{ player.team_name }}</div>
-                    <div class="owner-name">de {{ player.owner }}</div>
-                </div>
+                                 <div class="player-info">
+                     <div class="player-name">{{ player.name }}</div>
+                     <div class="team-name">{{ player.team_name }}</div>
+                     <div class="owner-name">de {{ player.owner }}</div>
+                     <div class="position-name">{{ player.position }}</div>
+                 </div>
                 <div class="player-details">
                     <div class="detail">
                         <div class="label">Valor</div>
-                        <div class="value">{{ "{:,.0f}".format(player.market_value).replace(",", ".") }} €
-                            <div class="trend {% if player.market_value_trend > 0 %}positive{% elif player.market_value_trend < 0 %}negative{% endif %}">
-                                <span>{% if player.market_value_trend > 0 %}▲{% elif player.market_value_trend < 0 %}▼{% endif %}</span>
-                                <span>{{ "{:,.0f}".format(player.market_value_trend | abs).replace(",", ".") }}</span>
-                            </div>
+                        <div class="value">
+                            {% if player.market_value %}
+                                {{ "{:,.0f}".format(player.market_value).replace(",", ".") }} €
+                            {% else %}
+                                N/A
+                            {% endif %}
+                            {% if player.market_value_trend is not none %}
+                                <div class="trend {% if player.market_value_trend > 0 %}positive{% elif player.market_value_trend < 0 %}negative{% endif %}">
+                                    <span>{% if player.market_value_trend > 0 %}▲{% elif player.market_value_trend < 0 %}▼{% endif %}</span>
+                                    <span>{{ "{:,.0f}".format(player.market_value_trend | abs).replace(",", ".") }}</span>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="detail">
                         <div class="label">Cláusula</div>
-                        <div class="value">{{ "{:,.0f}".format(player.buyout_clause).replace(",", ".") }} €</div>
+                        <div class="value">
+                            {% if player.buyout_clause %}
+                                {{ "{:,.0f}".format(player.buyout_clause).replace(",", ".") }} €
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="detail">
                         <div class="label">Oferta Máx. (14d)</div>
-                        {% set max_bid = player.market_value + (player.market_value_trend * 14) %}
-                        <div class="value {% if player.market_value_trend > 0 %}positive{% else %}negative{% endif %}">
-                            {{ "{:,.0f}".format(max_bid).replace(",", ".") }} €
-                        </div>
+                        {% if player.market_value and player.market_value_trend is not none %}
+                            {% set max_bid = player.market_value + (player.market_value_trend * 14) %}
+                            <div class="value {% if player.market_value_trend > 0 %}positive{% else %}negative{% endif %}">
+                                {{ "{:,.0f}".format(max_bid).replace(",", ".") }} €
+                            </div>
+                        {% else %}
+                            <div class="value">N/A</div>
+                        {% endif %}
                     </div>
-                    <div class="detail countdown-container">
-                        <div class="countdown" data-time="{{ player.time_remaining_seconds }}"></div>
-                    </div>
+                                         <div class="detail countdown-container">
+                         <div class="label">Tiempo Restante</div>
+                         <div class="countdown" data-time="{{ player.time_remaining_seconds }}"></div>
+                     </div>
                 </div>
             </div>
             {% else %}

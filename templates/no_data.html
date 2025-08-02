@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Token - Asistente LaLiga Fantasy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a202c;
+            --card-color: #2d3748;
+            --text-color: #e2e8f0;
+            --subtle-text: #a0aec0;
+            --header-color: #9f7aea;
+            --accent-color: #805AD5;
+            --border-color: #4a5568;
+            --error-color: #f56565;
+            --success-color: #48bb78;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 2rem; }
+        .container { max-width: 600px; margin: auto; }
+        nav { text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+        nav a { color: var(--subtle-text); text-decoration: none; margin: 0 1rem; font-size: 1.2rem; font-weight: 600; padding-bottom: 0.5rem; transition: color 0.3s; }
+        nav a:hover { color: var(--header-color); }
+        nav a.active { color: var(--text-color); border-bottom: 3px solid var(--header-color); }
+        
+        .main-card { 
+            background-color: var(--card-color); 
+            border-radius: 12px; 
+            padding: 2rem; 
+            border: 1px solid var(--border-color); 
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .icon { 
+            font-size: 4rem; 
+            color: var(--header-color); 
+            margin-bottom: 1rem; 
+        }
+        
+        .title { 
+            color: var(--header-color); 
+            font-size: 1.8rem; 
+            font-weight: 700; 
+            margin-bottom: 1rem; 
+        }
+        
+        .message { 
+            font-size: 1.1rem; 
+            margin-bottom: 1.5rem; 
+            line-height: 1.6;
+        }
+        
+        .details { 
+            background-color: var(--bg-color); 
+            padding: 1rem; 
+            border-radius: 8px; 
+            border-left: 4px solid var(--accent-color);
+            text-align: left;
+            font-size: 0.9rem;
+            color: var(--subtle-text);
+            margin-bottom: 1.5rem;
+        }
+        
+        .token-form {
+            background-color: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--header-color);
+        }
+        
+        .submit-button { 
+            background-color: var(--accent-color); 
+            color: var(--text-color); 
+            border: none; 
+            padding: 0.8rem 1.5rem; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            transition: background-color 0.3s; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: inline-block;
+            margin-top: 1rem;
+        }
+        .submit-button:hover { background-color: var(--header-color); }
+        .submit-button:disabled { 
+            background-color: var(--border-color); 
+            cursor: not-allowed; 
+        }
+        
+        .status-message {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .status-message.success {
+            background-color: rgba(72, 187, 120, 0.2);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        
+        .status-message.error {
+            background-color: rgba(245, 101, 101, 0.2);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+        
+        .instructions {
+            background-color: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        
+        .instructions h3 {
+            color: var(--header-color);
+            margin-bottom: 1rem;
+        }
+        
+        .instructions ol {
+            margin-left: 1.5rem;
+            line-height: 1.8;
+        }
+        
+        .instructions code {
+            background-color: var(--card-color);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/">Mercado</a>
+            <a href="/clausulazos">Clausulazos</a>
+            <a href="/my_team">Mi Equipo</a>
+        </nav>
+        
+        <div class="main-card">
+            <div class="icon">🔐</div>
+            <h1 class="title">Configuración de Token</h1>
+            <p class="message">{{ message }}</p>
+            
+            <div class="details">
+                <strong>Detalles:</strong> {{ details }}
+            </div>
+            
+            <div class="token-form">
+                <h3>Introduce tu Bearer Token</h3>
+                <p style="margin-bottom: 1rem; color: var(--subtle-text);">
+                    Para acceder a los datos de LaLiga Fantasy, necesitas proporcionar un token de autenticación válido.
+                </p>
+                
+                <div class="form-group">
+                    <label for="token-input">Bearer Token:</label>
+                    <input type="text" id="token-input" placeholder="eyJhbGciOiJSUzI1NiIsImtpZCI6..." style="font-family: monospace; font-size: 0.9rem;">
+                </div>
+                
+                <button class="submit-button" id="save-token-btn" onclick="saveToken()">Guardar Token</button>
+                
+                <div id="status-message" class="status-message" style="display: none;"></div>
+            </div>
+            
+            <div class="instructions">
+                <h3>¿Cómo obtener el Bearer Token?</h3>
+                <ol>
+                    <li>Ve a <a href="https://fantasy.laliga.com" target="_blank" style="color: var(--header-color);">LaLiga Fantasy</a></li>
+                    <li>Inicia sesión con tu cuenta</li>
+                    <li>Abre las herramientas de desarrollador (F12)</li>
+                    <li>Ve a la pestaña <strong>Network</strong></li>
+                    <li>Recarga la página</li>
+                    <li>Busca una petición que contenga <code>authorization: Bearer</code></li>
+                    <li>Copia el token que aparece después de "Bearer "</li>
+                    <li>Pégalo en el campo de arriba y haz clic en "Guardar Token"</li>
+                </ol>
+                <p><strong>Nota:</strong> El token se guardará localmente y se usará automáticamente en futuras sesiones.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function saveToken() {
+            const tokenInput = document.getElementById('token-input');
+            const saveBtn = document.getElementById('save-token-btn');
+            const statusDiv = document.getElementById('status-message');
+            
+            const token = tokenInput.value.trim();
+            if (!token) {
+                showStatus('Por favor, introduce un token válido', 'error');
+                return;
+            }
+            
+            // Deshabilitar botón durante la petición
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Guardando...';
+            
+            try {
+                const response = await fetch('/api/save_token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ ' + data.message + '. Redirigiendo a la aplicación...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showStatus('❌ Error: ' + (data.error || 'Error desconocido'), 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Error de conexión: ' + error.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Guardar Token';
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Ocultar después de 5 segundos si es un error
+            if (type === 'error') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Permitir enviar con Enter
+        document.getElementById('token-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveToken();
+            }
+        });
+    </script>
+</body>
+</html> 

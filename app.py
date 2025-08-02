@@ -4,6 +4,7 @@ import os
 import personal_lineup
 import database
 import clausulazos
+import config
 from clausulazos import get_league_ranking
 
 # --- Configuración ---
@@ -23,11 +24,19 @@ def fa_scraping_job():
     global market_data_cache, clausulazos_data_cache, my_team_cache, ranking_cache
     logging.info("Iniciando ciclo de scraping manual...")
     try:
+        # Verificar autenticación antes de continuar
+        token = config.get_bearer_token()
+        if token:
+            logging.info("Autenticación exitosa")
+        else:
+            logging.warning("No hay token válido disponible")
+            return
+        
         market_data_cache = personal_lineup.main()
         logging.info(f"Ciclo de scraping de mercado completado: {len(market_data_cache)} jugadores.")
         
         all_clausulazos = clausulazos.get_all_players_with_clause()
-        clausulazos_data_cache = [p for p in all_clausulazos if p.get('owner') != MY_MANAGER_NAME]
+        clausulazos_data_cache = all_clausulazos
         logging.info(f"Ciclo de scraping de clausulazos completado: {len(clausulazos_data_cache)} jugadores.")
         
         my_team_cache = [p for p in all_clausulazos if p.get('owner') == MY_MANAGER_NAME]
@@ -45,6 +54,11 @@ def fa_scraping_job():
 # --- Rutas de la Aplicación Web ---
 @app.route('/')
 def index():
+    if not market_data_cache:
+        return render_template('no_data.html', 
+                             message="No hay datos del mercado disponibles",
+                             details="Es posible que necesites configurar un token de autenticación válido.")
+    
     sort_by = request.args.get('sort', 'market_value_desc')
     players_to_display = list(market_data_cache)
     
@@ -62,6 +76,11 @@ def index():
 
 @app.route('/clausulazos')
 def clausulazos_page():
+    if not clausulazos_data_cache:
+        return render_template('no_data.html', 
+                             message="No hay datos de clausulazos disponibles",
+                             details="Es posible que necesites configurar un token de autenticación válido.")
+    
     sort_by = request.args.get('sort', 'time_remaining_asc')
     players_to_display = list(clausulazos_data_cache)
 
@@ -71,7 +90,9 @@ def clausulazos_page():
     key_map = {
         'time_remaining_asc': ('time_remaining_seconds', False),
         'buyout_clause_desc': ('buyout_clause', True),
-        'buyout_clause_asc': ('buyout_clause', False)
+        'buyout_clause_asc': ('buyout_clause', False),
+        'position_asc': ('position_id', False),
+        'position_desc': ('position_id', True)
     }
 
     sort_key, reverse = key_map.get(sort_by, ('time_remaining_seconds', False))
@@ -122,6 +143,37 @@ def refresh_data():
     fa_scraping_job()
     referrer = request.referrer or url_for('index')
     return redirect(referrer)
+
+@app.route('/api/save_token', methods=['POST'])
+def save_token():
+    """Guarda un nuevo token desde el frontend y ejecuta el scraping"""
+    try:
+        data = request.get_json()
+        token = data.get('token')
+        if not token:
+            return {'success': False, 'error': 'Token no proporcionado'}, 400
+        
+        from token_manager import token_manager
+        if token_manager.save_token(token):
+            # Ejecutar el scraping después de guardar el token
+            try:
+                fa_scraping_job()
+                return {'success': True, 'message': 'Token guardado y datos cargados exitosamente'}
+            except Exception as scraping_error:
+                return {'success': True, 'message': 'Token guardado pero error al cargar datos: ' + str(scraping_error)}
+        else:
+            return {'success': False, 'error': 'Error al guardar el token'}, 500
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 500
+
+@app.route('/api/check_auth')
+def check_auth():
+    """Verifica si hay un token válido"""
+    try:
+        token = config.get_bearer_token()
+        return {'authenticated': token is not None}
+    except Exception as e:
+        return {'authenticated': False, 'error': str(e)}
 
 # --- Arranque de la Aplicación ---
 if __name__ == '__main__':

@@ -47,6 +47,27 @@
         .trend { display: flex; align-items: center; justify-content: flex-end; gap: 0.3rem; font-size: 0.8rem; }
         .trend.positive, .value.positive { color: var(--positive-color); }
         .trend.negative, .value.negative { color: var(--negative-color); }
+        .value.safe-bid { color: #d69e2e; }
+        .stat .label.safe-bid-label { color: #d69e2e; cursor: help; position: relative; }
+        .safe-bid-label:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: pre-line;
+            z-index: 1000;
+            border: 1px solid #4a5568;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            min-width: 150px;
+            text-align: center;
+        }
+        .anticandy { font-size: 0.7rem; color: #f56565; text-transform: uppercase; font-weight: 600; margin-top: 0.2rem; }
         .position-1 { color: #e53e3e; }
         .position-2 { color: #3182ce; }
         .position-3 { color: #38a169; }
@@ -97,11 +118,20 @@
                             <span>{{ "{:,.0f}".format(player.market_value_trend | abs).replace(",", ".") }}</span>
                         </div>
                     </div>
+                    {% set max_bid = player.market_value + (player.market_value_trend * 14) %}
+                    {% if max_bid >= player.market_value %}
                     <div class="stat">
-                        <div class="label">Oferta Máx. (14d)</div>
-                        {% set max_bid = player.market_value + (player.market_value_trend * 14) %}
+                        <div class="label">Máxima Puja (14D)</div>
                         <div class="value {% if player.market_value_trend > 0 %}positive{% elif player.market_value_trend < 0 %}negative{% endif %}">
                             {{ "{:,.0f}".format(max_bid).replace(",", ".") }} €
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="stat">
+                        <div class="label safe-bid-label" data-tooltip="+5%: {{ '{:,.0f}'.format(player.market_value * 1.05).replace(',', '.') }}€&#10;+7%: {{ '{:,.0f}'.format(player.market_value * 1.07).replace(',', '.') }}€&#10;+10%: {{ '{:,.0f}'.format(player.market_value * 1.1).replace(',', '.') }}€">Puja Safe</div>
+                        {% set safe_bid = player.market_value * 1.1 %}
+                        <div class="value safe-bid">
+                            {{ "{:,.0f}".format(safe_bid).replace(",", ".") }} €
                         </div>
                     </div>
                 </div>
