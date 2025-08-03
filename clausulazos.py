@@ -713,6 +713,17 @@ def get_my_team_players_from_files():
                             except:
                                 pass
                         
+                        # Intentar obtener tendencia del valor de mercado
+                        market_value_trend = 0
+                        try:
+                            token = config.get_bearer_token()
+                            if token:
+                                trend_data = get_market_value_history(player_info.get('id'), token)
+                                if trend_data:
+                                    market_value_trend = trend_data.get('trend', 0)
+                        except:
+                            pass
+                        
                         my_players.append({
                             'id': player_info.get('id'),
                             'name': player_info.get('nickname', player_info.get('name', 'Unknown')),
@@ -720,7 +731,7 @@ def get_my_team_players_from_files():
                             'position': POSITIONS.get(player_info.get('positionId'), 'N/A'),
                             'position_id': player_info.get('positionId'),
                             'market_value': player_info.get('marketValue', 0),
-                            'market_value_trend': 0,  # No tenemos historial en archivos locales
+                            'market_value_trend': market_value_trend,
                             'player_points': player_info.get('points', 0),
                             'image_url': image_url,
                             'buyout_clause': player.get('buyoutClause', 0),

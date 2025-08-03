@@ -26,7 +26,7 @@
         
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 2rem; }
-        .container { max-width: 1200px; margin: auto; }
+        .container { max-width: 100%; padding: 0 2rem; }
         nav { text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
         nav a { color: var(--subtle-text); text-decoration: none; margin: 0 1rem; font-size: 1.2rem; font-weight: 600; padding-bottom: 0.5rem; transition: color 0.3s; }
         nav a:hover { color: var(--header-color); }
@@ -34,28 +34,53 @@
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         h1 { color: var(--header-color); font-size: 2.5rem; }
         h2 { color: var(--header-color); font-size: 1.8rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border-color); }
-        .refresh-button { /* Estilos del botón de recarga */ }
 
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .dashboard-item { background: var(--card-color); padding: 1.5rem; border-radius: 12px; text-align: center; }
-        .dashboard-item .label { font-size: 1rem; color: var(--subtle-text); }
-        .dashboard-item .value { font-size: 2.5rem; font-weight: 700; color: var(--text-color); }
+        /* Layout with sidebar */
+        .main-content { display: flex; gap: 2rem; height: calc(100vh - 200px); min-height: 0; }
+        .sidebar { width: 300px; flex-shrink: 0; }
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
         
-        .section-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 2rem; }
-        @media (min-width: 1024px) {
-            .section-grid { grid-template-columns: 1fr 2fr; }
-        }
-
-        .analysis-section .study-category { margin-bottom: 1.5rem; }
-        .analysis-section h3 { font-size: 1.2rem; color: var(--subtle-text); margin-bottom: 0.5rem; }
-        .analysis-list .player-item { display: flex; align-items: center; gap: 1rem; padding: 0.5rem; border-radius: 8px; }
-        .analysis-list .player-item:nth-child(odd) { background-color: rgba(74, 85, 104, 0.2); }
-        .analysis-list img { width: 30px; height: 30px; border-radius: 50%; }
-        .analysis-list .name { font-weight: 600; flex-grow: 1; }
-        .analysis-list .metric { font-weight: 700; }
-
-        .player-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
-        .player-card { background-color: var(--card-color); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        /* Sidebar styles */
+        .sidebar { background-color: var(--card-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; height: 100%; overflow-y: auto; }
+        .filter-section { margin-bottom: 2rem; }
+        .filter-section h3 { color: var(--header-color); font-size: 1.1rem; margin-bottom: 1rem; }
+        
+        /* Checkbox styles */
+        .checkbox-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .checkbox-item { display: flex; align-items: center; gap: 0.5rem; }
+        .checkbox-item input[type="checkbox"] { width: 16px; height: 16px; }
+        .checkbox-item label { font-size: 0.9rem; cursor: pointer; }
+        
+        /* Range slider styles */
+        .range-group { margin-bottom: 1rem; }
+        .range-inputs { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .range-inputs input[type="number"] { width: 80px; padding: 0.3rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color); color: var(--text-color); }
+        .range-slider { width: 100%; height: 6px; border-radius: 3px; background: var(--border-color); outline: none; }
+        .range-slider::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--header-color); cursor: pointer; }
+        .range-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--header-color); cursor: pointer; border: none; }
+        
+        /* Filter buttons */
+        .filter-buttons { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .filter-btn { padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-color); color: var(--text-color); cursor: pointer; font-size: 0.9rem; transition: all 0.3s; }
+        .filter-btn:hover { background: var(--header-color); }
+        .filter-btn.secondary { background: transparent; }
+        .filter-btn.secondary:hover { border-color: var(--header-color); }
+        
+        /* Results counter */
+        .results-counter { text-align: center; margin-bottom: 1rem; }
+        .results-counter .count { font-size: 1.5rem; font-weight: 700; color: var(--header-color); }
+        .results-counter .label { font-size: 0.9rem; color: var(--subtle-text); margin-top: 0.3rem; }
+        
+        /* Sort section */
+        .sort-section { background-color: var(--card-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; flex-shrink: 0; }
+        .sort-buttons { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .filter-button { background-color: var(--bg-color); border: 1px solid var(--border-color); color: var(--subtle-text); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; text-decoration: none; transition: all 0.3s; font-size: 0.9rem; }
+        .filter-button:hover, .filter-button.active { background-color: var(--header-color); color: var(--text-color); border-color: var(--header-color); }
+        
+        /* Player list */
+        .player-list { display: flex; flex-direction: column; gap: 1rem; height: 100%; overflow-y: auto; min-height: 0; }
+        .player-card { background-color: var(--card-color); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: opacity 0.3s, height 0.3s; }
+        .player-card.hidden { display: none; }
         .player-header { display: flex; align-items: center; gap: 1rem; padding: 1rem; }
         .player-header img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--header-color); }
         .player-header .info { flex-grow: 1; }
@@ -71,7 +96,19 @@
         .detail .value { font-size: 1rem; font-weight: 600; }
         .trend.positive, .value.positive { color: var(--positive-color); }
         .trend.negative, .value.negative { color: var(--negative-color); }
-        .countdown { color: var(--header-color); font-weight: bold;}
+        .countdown { color: var(--header-color); font-weight: bold; }
+        
+        /* Custom scrollbars */
+        .sidebar::-webkit-scrollbar, .player-list::-webkit-scrollbar { width: 8px; }
+        .sidebar::-webkit-scrollbar-track, .player-list::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 4px; }
+        .sidebar::-webkit-scrollbar-thumb, .player-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .sidebar::-webkit-scrollbar-thumb:hover, .player-list::-webkit-scrollbar-thumb:hover { background: var(--header-color); }
+        
+        /* Dashboard */
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .dashboard-item { background: var(--card-color); padding: 1.5rem; border-radius: 12px; text-align: center; }
+        .dashboard-item .label { font-size: 1rem; color: var(--subtle-text); }
+        .dashboard-item .value { font-size: 2.5rem; font-weight: 700; color: var(--text-color); }
     </style>
 </head>
 <body>
@@ -97,69 +134,132 @@
             </div>
         </div>
 
-        <div class="section-grid">
-            <aside class="analysis-section">
-                <!-- Clausulazos en Alerta -->
-                <h2>Alertas y Estudio</h2>
-                <div class="study-category">
-                    <h3>🚨 Clausulazos para Recibir</h3>
-                    <div class="analysis-list">
-                        {% for player in alert_players %}
-                        <div class="player-item">
-                            <img src="{{ player.image_url }}" alt="{{ player.name }}">
-                            <span class="name">{{ player.name }}</span>
-                            <span class="metric countdown" data-time="{{ player.time_remaining_seconds }}"></span>
+        <div class="main-content">
+            <!-- Sidebar Filters -->
+            <aside class="sidebar">
+                <div class="results-counter">
+                    <div class="count" id="resultsCount">{{ players|length }}</div>
+                    <div class="label">jugadores encontrados</div>
+                </div>
+
+                <!-- Position Filter -->
+                <div class="filter-section">
+                    <h3>Posición</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="pos-1" data-position="1" checked>
+                            <label for="pos-1">Portero</label>
                         </div>
-                        {% else %}
-                        <p>No tienes jugadores en riesgo de ser fichados.</p>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="pos-2" data-position="2" checked>
+                            <label for="pos-2">Defensa</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="pos-3" data-position="3" checked>
+                            <label for="pos-3">Centrocampista</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="pos-4" data-position="4" checked>
+                            <label for="pos-4">Delantero</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Value Range Filter -->
+                <div class="filter-section">
+                    <h3>Rango de Valor de Mercado (M€)</h3>
+                    <div class="range-group">
+                        <div class="range-inputs">
+                            <input type="number" id="marketMin" placeholder="Mín" min="0" step="1">
+                            <input type="number" id="marketMax" placeholder="Máx" min="0" step="1">
+                        </div>
+                        <input type="range" id="marketRange" class="range-slider" min="0" max="200" value="0">
+                    </div>
+                </div>
+
+                <!-- Points Range Filter -->
+                <div class="filter-section">
+                    <h3>Rango de Puntos</h3>
+                    <div class="range-group">
+                        <div class="range-inputs">
+                            <input type="number" id="pointsMin" placeholder="Mín" min="0" step="1">
+                            <input type="number" id="pointsMax" placeholder="Máx" min="0" step="1">
+                        </div>
+                        <input type="range" id="pointsRange" class="range-slider" min="0" max="100" value="0">
+                    </div>
+                </div>
+
+                <!-- Team Filter -->
+                <div class="filter-section">
+                    <h3>Equipo</h3>
+                    <div class="filter-buttons">
+                        <button class="filter-btn" onclick="selectAllTeams()">Seleccionar Todo</button>
+                        <button class="filter-btn secondary" onclick="deselectAllTeams()">Desmarcar Todo</button>
+                    </div>
+                    <div class="checkbox-group" id="teamCheckboxes">
+                        {% set teams = players | map(attribute='team_name') | unique | list | sort %}
+                        {% for team in teams %}
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="team-{{ loop.index }}" data-team="{{ team }}" checked>
+                            <label for="team-{{ loop.index }}">{{ team }}</label>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <!-- Estudio de Mercado -->
-                <div class="study-category">
-                    <h3>📈 Top Crecimiento</h3>
-                    <div class="analysis-list">
-                        {% for player in top_gainers %}
-                        <div class="player-item">
-                            <img src="{{ player.image_url }}" alt="{{ player.name }}">
-                            <span class="name">{{ player.name }}</span>
-                            <span class="metric positive">+{{ "{:,.0f}".format(player.market_value_trend).replace(",", ".") }}</span>
+                <!-- Market Value Trend Filter -->
+                <div class="filter-section">
+                    <h3>Tendencia de Valor</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="trend-positive" data-trend="positive" checked>
+                            <label for="trend-positive">En Subida</label>
                         </div>
-                        {% else %}<p>No hay jugadores con crecimiento notable.</p>{% endfor %}
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="trend-negative" data-trend="negative" checked>
+                            <label for="trend-negative">En Bajada</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="trend-neutral" data-trend="neutral" checked>
+                            <label for="trend-neutral">Estable</label>
+                        </div>
                     </div>
                 </div>
-                <div class="study-category">
-                    <h3>📉 En Caída Libre</h3>
-                    <div class="analysis-list">
-                         {% for player in top_losers %}
-                        <div class="player-item">
-                            <img src="{{ player.image_url }}" alt="{{ player.name }}">
-                            <span class="name">{{ player.name }}</span>
-                            <span class="metric negative">{{ "{:,.0f}".format(player.market_value_trend).replace(",", ".") }}</span>
-                        </div>
-                        {% else %}<p>Ningún jugador está en caída libre.</p>{% endfor %}
-                    </div>
-                </div>
-                 <div class="study-category">
-                    <h3>🏆 Top Rentabilidad (Pts/Millón)</h3>
-                    <div class="analysis-list">
-                         {% for player in most_profitable %}
-                        <div class="player-item">
-                            <img src="{{ player.image_url }}" alt="{{ player.name }}">
-                            <span class="name">{{ player.name }}</span>
-                            <span class="metric">{{ "%.2f"|format(player.profitability) }}</span>
-                        </div>
-                        {% else %}<p>No hay datos de rentabilidad.</p>{% endfor %}
-                    </div>
+
+                <!-- Filter Buttons -->
+                <div class="filter-buttons">
+                    <button class="filter-btn" onclick="applyFilters()">Aplicar Filtros</button>
+                    <button class="filter-btn secondary" onclick="clearFilters()">Limpiar</button>
                 </div>
             </aside>
 
-            <main class="team-section">
-                <h2>Plantilla</h2>
+            <!-- Main Content Area -->
+            <div class="content-area">
+                <!-- Sort Section -->
+                <div class="sort-section">
+                    <h3>Ordenar por:</h3>
+                    <div class="sort-buttons">
+                        <button class="filter-button active" data-sort="name">Nombre</button>
+                        <button class="filter-button" data-sort="team">Equipo</button>
+                        <button class="filter-button" data-sort="position">Posición</button>
+                        <button class="filter-button" data-sort="market_value">Valor de Mercado</button>
+                        <button class="filter-button" data-sort="player_points">Puntos</button>
+                        <button class="filter-button" data-sort="market_value_trend">Tendencia</button>
+                        <button class="filter-button" data-sort="buyout_clause">Cláusula</button>
+                        <button class="filter-button" data-sort="clause_proximity">Cláusulas Cercanas</button>
+                    </div>
+                </div>
+
+                <!-- Player List -->
                 <div class="player-list">
                     {% for player in players %}
-                    <div class="player-card">
+                    <div class="player-card" 
+                         data-position="{{ player.position_id }}" 
+                         data-team="{{ player.team_name }}"
+                         data-market-value="{{ player.market_value }}"
+                         data-points="{{ player.player_points }}"
+                         data-trend="{{ 'positive' if player.market_value_trend > 0 else 'negative' if player.market_value_trend < 0 else 'neutral' }}"
+                         data-buyout-clause="{{ player.buyout_clause }}">
                         <div class="player-header">
                             <img src="{{ player.image_url }}" alt="{{ player.name }}">
                             <div class="info">
@@ -175,11 +275,11 @@
                             </div>
                             <div class="detail">
                                 <div class="label">Valor de Mercado</div>
-                                <div class="value">{{ "{:,.0f}".format(player.market_value).replace(",", ".") }} €</div>
+                                <div class="value market-value-main">{{ "{:,.0f}".format(player.market_value).replace(",", ".") }} €</div>
                             </div>
-                             <div class="detail">
+                            <div class="detail">
                                 <div class="label">Cláusula</div>
-                                <div class="value">{{ "{:,.0f}".format(player.buyout_clause).replace(",", ".") }} €</div>
+                                <div class="value buyout-clause-main">{{ "{:,.0f}".format(player.buyout_clause).replace(",", ".") }} €</div>
                             </div>
                             <div class="detail">
                                 <div class="label">Tendencia</div>
@@ -192,13 +292,300 @@
                     </div>
                     {% endfor %}
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
     <script>
-    // Script para los contadores (si los hubiera en un futuro)
-    document.addEventListener('DOMContentLoaded', function() {
+        // Global variables
+        let currentSort = 'name';
+        let currentSortDirection = 'asc';
+        
+        // Initialize filters
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing filters...');
+            calculateDynamicRanges();
+            updateSliderRanges();
+            
+            // Set default values for range inputs
+            const marketRange = document.getElementById('marketRange');
+            const pointsRange = document.getElementById('pointsRange');
+            
+            if (marketRange && marketRange.min) {
+                document.getElementById('marketMin').value = marketRange.min;
+            }
+            if (pointsRange && pointsRange.min) {
+                document.getElementById('pointsMin').value = pointsRange.min;
+            }
+            
+            applyFilters();
+        });
+        
+        // Calculate dynamic ranges based on actual data
+        function calculateDynamicRanges() {
+            const players = document.querySelectorAll('.player-card');
+            let marketValues = [];
+            let pointsValues = [];
+            
+            console.log('Calculating dynamic ranges for', players.length, 'players');
+            
+            players.forEach(player => {
+                const marketValue = parseInt(player.getAttribute('data-market-value'));
+                const points = parseInt(player.getAttribute('data-points'));
+                if (!isNaN(marketValue)) marketValues.push(marketValue);
+                if (!isNaN(points)) pointsValues.push(points);
+            });
+            
+            console.log('Market values found:', marketValues.length);
+            console.log('Points values found:', pointsValues.length);
+            
+            if (marketValues.length > 0) {
+                const minMarket = Math.floor(Math.min(...marketValues) / 1000000);
+                const maxMarket = Math.ceil(Math.max(...marketValues) / 1000000);
+                console.log('Market range:', minMarket, '-', maxMarket, 'M€');
+                
+                const marketRange = document.getElementById('marketRange');
+                if (marketRange) {
+                    marketRange.min = minMarket;
+                    marketRange.max = maxMarket + Math.ceil(maxMarket * 0.1);
+                    marketRange.value = minMarket;
+                }
+                
+                const marketMin = document.getElementById('marketMin');
+                const marketMax = document.getElementById('marketMax');
+                if (marketMin) marketMin.placeholder = minMarket;
+                if (marketMax) marketMax.placeholder = maxMarket;
+            }
+            
+            if (pointsValues.length > 0) {
+                const minPoints = Math.min(...pointsValues);
+                const maxPoints = Math.max(...pointsValues);
+                console.log('Points range:', minPoints, '-', maxPoints);
+                
+                const pointsRange = document.getElementById('pointsRange');
+                if (pointsRange) {
+                    pointsRange.min = minPoints;
+                    pointsRange.max = maxPoints;
+                    pointsRange.value = minPoints;
+                }
+                
+                const pointsMin = document.getElementById('pointsMin');
+                const pointsMax = document.getElementById('pointsMax');
+                if (pointsMin) pointsMin.placeholder = minPoints;
+                if (pointsMax) pointsMax.placeholder = maxPoints;
+            }
+        }
+        
+        // Update slider ranges
+        function updateSliderRanges() {
+            // Market value range
+            const marketRange = document.getElementById('marketRange');
+            const marketMin = document.getElementById('marketMin');
+            const marketMax = document.getElementById('marketMax');
+            
+            marketRange.addEventListener('input', function() {
+                marketMin.value = this.value;
+            });
+            
+            marketMin.addEventListener('input', function() {
+                marketRange.value = this.value;
+            });
+            
+            marketMax.addEventListener('input', function() {
+                // Update max if needed
+            });
+            
+            // Points range
+            const pointsRange = document.getElementById('pointsRange');
+            const pointsMin = document.getElementById('pointsMin');
+            const pointsMax = document.getElementById('pointsMax');
+            
+            pointsRange.addEventListener('input', function() {
+                pointsMin.value = this.value;
+            });
+            
+            pointsMin.addEventListener('input', function() {
+                pointsRange.value = this.value;
+            });
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            const players = document.querySelectorAll('.player-card');
+            let visibleCount = 0;
+            
+            // Get filter values
+            const selectedPositions = Array.from(document.querySelectorAll('input[data-position]:checked')).map(cb => cb.getAttribute('data-position'));
+            const selectedTeams = Array.from(document.querySelectorAll('input[data-team]:checked')).map(cb => cb.getAttribute('data-team'));
+            const selectedTrends = Array.from(document.querySelectorAll('input[data-trend]:checked')).map(cb => cb.getAttribute('data-trend'));
+            
+            const marketMin = parseFloat(document.getElementById('marketMin').value) || 0;
+            const marketMax = parseFloat(document.getElementById('marketMax').value) || Infinity;
+            const pointsMin = parseFloat(document.getElementById('pointsMin').value) || 0;
+            const pointsMax = parseFloat(document.getElementById('pointsMax').value) || Infinity;
+            
+            console.log('Filtering players...');
+            console.log('Selected positions:', selectedPositions);
+            console.log('Selected teams:', selectedTeams);
+            console.log('Selected trends:', selectedTrends);
+            console.log('Market range:', marketMin, '-', marketMax);
+            console.log('Points range:', pointsMin, '-', pointsMax);
+            
+            players.forEach(player => {
+                const position = player.getAttribute('data-position');
+                const team = player.getAttribute('data-team');
+                const trend = player.getAttribute('data-trend');
+                const marketValue = parseFloat(player.getAttribute('data-market-value')) / 1000000; // Convert to millions
+                const points = parseFloat(player.getAttribute('data-points'));
+                
+                const positionMatch = selectedPositions.includes(position);
+                const teamMatch = selectedTeams.includes(team);
+                const trendMatch = selectedTrends.includes(trend);
+                const marketMatch = marketValue >= marketMin && marketValue <= marketMax;
+                const pointsMatch = points >= pointsMin && points <= pointsMax;
+                
+                console.log(`Player ${player.querySelector('.name').textContent}:`, {
+                    position, team, trend, marketValue, points,
+                    positionMatch, teamMatch, trendMatch, marketMatch, pointsMatch
+                });
+                
+                if (positionMatch && teamMatch && trendMatch && marketMatch && pointsMatch) {
+                    player.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    player.classList.add('hidden');
+                }
+            });
+            
+            // Update results counter
+            document.getElementById('resultsCount').textContent = visibleCount;
+            
+            // Apply current sort
+            sortPlayers();
+        }
+        
+        // Clear all filters
+        function clearFilters() {
+            // Check all checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+            
+            // Reset range inputs
+            document.getElementById('marketMin').value = '';
+            document.getElementById('marketMax').value = '';
+            document.getElementById('pointsMin').value = '';
+            document.getElementById('pointsMax').value = '';
+            
+            // Reset sliders
+            const marketRange = document.getElementById('marketRange');
+            const pointsRange = document.getElementById('pointsRange');
+            marketRange.value = marketRange.min;
+            pointsRange.value = pointsRange.min;
+            
+            applyFilters();
+        }
+        
+        // Team selection functions
+        function selectAllTeams() {
+            document.querySelectorAll('input[data-team]').forEach(cb => cb.checked = true);
+            applyFilters();
+        }
+        
+        function deselectAllTeams() {
+            document.querySelectorAll('input[data-team]').forEach(cb => cb.checked = false);
+            applyFilters();
+        }
+        
+        // Sorting functions
+        function sortPlayers() {
+            const playerList = document.querySelector('.player-list');
+            const players = Array.from(playerList.children).filter(player => !player.classList.contains('hidden'));
+            
+            players.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(currentSort) {
+                    case 'name':
+                        aValue = a.querySelector('.name').textContent.toLowerCase();
+                        bValue = b.querySelector('.name').textContent.toLowerCase();
+                        break;
+                    case 'team':
+                        aValue = a.querySelector('.team').textContent.toLowerCase();
+                        bValue = b.querySelector('.team').textContent.toLowerCase();
+                        break;
+                    case 'position':
+                        aValue = parseInt(a.getAttribute('data-position'));
+                        bValue = parseInt(b.getAttribute('data-position'));
+                        break;
+                    case 'market_value':
+                        aValue = parseInt(a.getAttribute('data-market-value'));
+                        bValue = parseInt(b.getAttribute('data-market-value'));
+                        break;
+                    case 'player_points':
+                        aValue = parseInt(a.getAttribute('data-points'));
+                        bValue = parseInt(b.getAttribute('data-points'));
+                        break;
+                    case 'market_value_trend':
+                        aValue = parseInt(a.getAttribute('data-market-value-trend') || '0');
+                        bValue = parseInt(b.getAttribute('data-market-value-trend') || '0');
+                        break;
+                    case 'buyout_clause':
+                        aValue = parseInt(a.getAttribute('data-buyout-clause'));
+                        bValue = parseInt(b.getAttribute('data-buyout-clause'));
+                        break;
+                    case 'clause_proximity':
+                        // Ordenar por proximidad de cláusula (más cercanas primero)
+                        const aClause = parseInt(a.getAttribute('data-buyout-clause'));
+                        const bClause = parseInt(b.getAttribute('data-buyout-clause'));
+                        const aMarketValue = parseInt(a.getAttribute('data-market-value'));
+                        const bMarketValue = parseInt(b.getAttribute('data-market-value'));
+                        
+                        // Calcular diferencia porcentual entre cláusula y valor de mercado
+                        const aProximity = aClause > 0 ? Math.abs((aClause - aMarketValue) / aMarketValue) : Infinity;
+                        const bProximity = bClause > 0 ? Math.abs((bClause - bMarketValue) / bMarketValue) : Infinity;
+                        
+                        aValue = aProximity;
+                        bValue = bProximity;
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aValue < bValue) return currentSortDirection === 'asc' ? -1 : 1;
+                if (aValue > bValue) return currentSortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Reorder DOM
+            players.forEach(player => playerList.appendChild(player));
+        }
+        
+        // Sort button event listeners
+        document.querySelectorAll('.filter-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const sortType = this.getAttribute('data-sort');
+                
+                // Update active button
+                document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Toggle direction if same sort
+                if (currentSort === sortType) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort = sortType;
+                    currentSortDirection = 'asc';
+                }
+                
+                sortPlayers();
+            });
+        });
+        
+        // Filter change event listeners
+        document.querySelectorAll('input[type="checkbox"], input[type="number"], input[type="range"]').forEach(input => {
+            input.addEventListener('change', applyFilters);
+        });
+        
+        // Countdown script
         const countdowns = document.querySelectorAll('.countdown');
         countdowns.forEach(countdown => {
             let seconds = parseInt(countdown.getAttribute('data-time'), 10);
@@ -216,7 +603,6 @@
             
             updateCountdown();
         });
-    });
     </script>
 </body>
 </html>
