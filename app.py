@@ -39,7 +39,8 @@ def fa_scraping_job():
         clausulazos_data_cache = all_clausulazos
         logging.info(f"Ciclo de scraping de clausulazos completado: {len(clausulazos_data_cache)} jugadores.")
         
-        my_team_cache = [p for p in all_clausulazos if p.get('owner') == MY_MANAGER_NAME]
+        # Obtener todos los jugadores de mi equipo
+        my_team_cache = clausulazos.get_my_team_players()
         logging.info(f"Datos de mi equipo cargados: {len(my_team_cache)} jugadores.")
 
         ranking_cache = get_league_ranking()

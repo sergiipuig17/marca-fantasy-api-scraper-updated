@@ -514,3 +514,227 @@ def debug_clause_system():
         
     except Exception as e:
         log.error(f"Error en debug_clause_system: {e}", exc_info=True)
+
+def get_position_id(position_name):
+    """
+    Convierte el nombre de la posición a ID numérico
+    """
+    position_map = {
+        'Portero': 1,
+        'Defensa': 2,
+        'Centrocampista': 3,
+        'Delantero': 4
+    }
+    return position_map.get(position_name, 0)
+
+def get_my_team_players():
+    """
+    Obtiene todos los jugadores de mi equipo desde la API o archivos locales
+    """
+    try:
+        # Primero intentar desde la API
+        token = config.get_bearer_token()
+        if not token:
+            log.error("No hay token válido disponible")
+            return get_my_team_players_from_files()
+        
+        auth = config.BearerAuth(token)
+        
+        # Obtener el ID de la liga
+        leagues_response = requests.get(config.URLS['leagues'], auth=auth, headers=config.HEADERS)
+        leagues_response.raise_for_status()
+        leagues_list = leagues_response.json()
+        
+        if not leagues_list:
+            log.error("No se encontraron ligas para este usuario")
+            return get_my_team_players_from_files()
+        
+        league_id = leagues_list[0]['id']
+        if not league_id:
+            log.error("No se pudo obtener el ID de la liga")
+            return get_my_team_players_from_files()
+        
+        # Obtener la lista de equipos de la liga
+        teams_url = f"{config.URLS['league_teams']}/{league_id}/teams/list"
+        log.info(f"Obteniendo equipos de la liga: {teams_url}")
+        
+        try:
+            response = requests.get(teams_url, auth=auth, headers=config.HEADERS, timeout=30)
+            response.raise_for_status()
+            teams_data = response.json()
+            
+            # Buscar mi equipo
+            my_team = None
+            for team in teams_data:
+                if team.get('managerName') == "Pushita Alemany":
+                    my_team = team
+                    break
+            
+            if not my_team:
+                log.error("No se encontró mi equipo en la liga")
+                return get_my_team_players_from_files()
+            
+            team_id = my_team.get('id')
+            log.info(f"Mi equipo encontrado: {my_team.get('name')} (ID: {team_id})")
+            
+            # Obtener los jugadores de mi equipo
+            players_url = f"{config.URLS['team_players']}/{team_id}/players"
+            log.info(f"Obteniendo jugadores de mi equipo: {players_url}")
+            
+            players_response = requests.get(players_url, auth=auth, headers=config.HEADERS, timeout=30)
+            players_response.raise_for_status()
+            players_data = players_response.json()
+            
+            my_players = []
+            for player in players_data:
+                if 'playerMaster' in player:
+                    player_info = player['playerMaster']
+                    
+                    # Obtener tendencia del valor de mercado
+                    market_value_trend = 0
+                    try:
+                        trend_data = get_market_value_history(player_info.get('id'), token)
+                        if trend_data:
+                            market_value_trend = trend_data.get('trend', 0)
+                    except:
+                        pass
+                    
+                    # Calcular tiempo restante de cláusula si existe
+                    time_remaining_seconds = float('inf')
+                    buyout_locked = False
+                    if 'buyoutClauseLockedEndTime' in player:
+                        try:
+                            locked_time = datetime.fromisoformat(player['buyoutClauseLockedEndTime'].replace('Z', '+00:00'))
+                            time_diff = locked_time - datetime.now(locked_time.tzinfo)
+                            time_remaining_seconds = time_diff.total_seconds()
+                            buyout_locked = time_remaining_seconds > 0
+                        except:
+                            pass
+                    
+                    my_players.append({
+                        'id': player_info.get('id'),
+                        'name': player_info.get('nickname', player_info.get('name', 'Unknown')),
+                        'team_name': player_info.get('team', {}).get('name', 'N/A'),
+                        'position': player_info.get('position', 'Unknown'),
+                        'position_id': get_position_id(player_info.get('position', 'Unknown')),
+                        'market_value': player_info.get('marketValue', 0),
+                        'market_value_trend': market_value_trend,
+                        'player_points': player_info.get('points', 0),
+                        'image_url': player_info.get('imageUrl', ''),
+                        'buyout_clause': player.get('buyoutClause', 0),
+                        'buyout_locked': buyout_locked,
+                        'time_remaining_seconds': time_remaining_seconds,
+                        'owner': "Pushita Alemany"
+                    })
+            
+            log.info(f"Jugadores de mi equipo obtenidos desde API: {len(my_players)}")
+            return my_players
+            
+        except Exception as api_error:
+            log.warning(f"Error al obtener datos desde API: {api_error}")
+            log.info("Intentando obtener datos desde archivos locales...")
+            return get_my_team_players_from_files()
+        
+    except Exception as e:
+        log.error(f"Error general al obtener jugadores de mi equipo: {e}", exc_info=True)
+        return get_my_team_players_from_files()
+
+def get_my_team_players_from_files():
+    """
+    Obtiene todos los jugadores de mi equipo desde los archivos JSON locales
+    """
+    try:
+        import os
+        from pathlib import Path
+        
+        # Buscar archivos de equipos en mis_ligas
+        ligas_dir = Path("mis_ligas")
+        if not ligas_dir.exists():
+            log.error("No existe el directorio mis_ligas")
+            return []
+        
+        # Buscar la primera liga disponible
+        ligas_disponibles = [d for d in ligas_dir.iterdir() if d.is_dir()]
+        if not ligas_disponibles:
+            log.error("No se encontraron ligas en mis_ligas")
+            return []
+        
+        league_dir = ligas_disponibles[0]
+        log.info(f"Analizando liga: {league_dir.name}")
+        
+        # Buscar archivos de equipos (excluyendo market.json)
+        team_files = [f for f in league_dir.glob("*.json") if f.name != "market.json"]
+        log.info(f"Archivos de equipos encontrados: {len(team_files)}")
+        
+        my_players = []
+        
+        # Buscar el archivo de mi equipo
+        my_team_file = None
+        for team_file in team_files:
+            if "Pushita Alemany" in team_file.name:
+                my_team_file = team_file
+                break
+        
+        if not my_team_file:
+            log.error("No se encontró el archivo de mi equipo")
+            return []
+        
+        log.info(f"Archivo de mi equipo encontrado: {my_team_file.name}")
+        
+        try:
+            with open(my_team_file, 'r', encoding='utf-8') as f:
+                team_data = json.load(f)
+            
+            if 'players' in team_data:
+                players = team_data['players']
+                log.info(f"Jugadores en mi equipo: {len(players)}")
+                
+                for player in players:
+                    if 'playerMaster' in player:
+                        player_info = player['playerMaster']
+                        
+                        # Obtener imagen del jugador
+                        images = player_info.get('images', {})
+                        image_url = (
+                            images.get('transparent', {}).get('256x256') or
+                            images.get('small', {}).get('256x278') or
+                            'https://assets-fantasy.llt-services.com/players/no-player-sq.png'
+                        )
+                        
+                        # Calcular tiempo restante de cláusula si existe
+                        time_remaining_seconds = float('inf')
+                        buyout_locked = False
+                        if 'buyoutClauseLockedEndTime' in player:
+                            try:
+                                locked_time = datetime.fromisoformat(player['buyoutClauseLockedEndTime'].replace('Z', '+00:00'))
+                                time_diff = locked_time - datetime.now(locked_time.tzinfo)
+                                time_remaining_seconds = time_diff.total_seconds()
+                                buyout_locked = time_remaining_seconds > 0
+                            except:
+                                pass
+                        
+                        my_players.append({
+                            'id': player_info.get('id'),
+                            'name': player_info.get('nickname', player_info.get('name', 'Unknown')),
+                            'team_name': player_info.get('team', {}).get('name', 'N/A'),
+                            'position': POSITIONS.get(player_info.get('positionId'), 'N/A'),
+                            'position_id': player_info.get('positionId'),
+                            'market_value': player_info.get('marketValue', 0),
+                            'market_value_trend': 0,  # No tenemos historial en archivos locales
+                            'player_points': player_info.get('points', 0),
+                            'image_url': image_url,
+                            'buyout_clause': player.get('buyoutClause', 0),
+                            'buyout_locked': buyout_locked,
+                            'time_remaining_seconds': time_remaining_seconds,
+                            'owner': "Pushita Alemany"  # Asumimos que es mi equipo
+                        })
+                        
+        except Exception as e:
+            log.warning(f"Error procesando archivo de mi equipo: {e}")
+        
+        log.info(f"Jugadores obtenidos desde archivos: {len(my_players)}")
+        return my_players
+        
+    except Exception as e:
+        log.error(f"Error al obtener jugadores desde archivos: {e}", exc_info=True)
+        return []
