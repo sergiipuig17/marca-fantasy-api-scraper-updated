@@ -76,29 +76,46 @@ def index():
 
 @app.route('/clausulazos')
 def clausulazos_page():
-    if not clausulazos_data_cache:
-        return render_template('no_data.html', 
-                             message="No hay datos de clausulazos disponibles",
-                             details="Es posible que necesites configurar un token de autenticación válido.")
+    # Obtener múltiples criterios de ordenación
+    sort_criteria = request.args.getlist('sort')
+    if not sort_criteria:
+        sort_criteria = ['time_remaining_asc']  # Ordenación por defecto
     
-    sort_by = request.args.get('sort', 'time_remaining_asc')
-    players_to_display = list(clausulazos_data_cache)
+    # Si no hay datos en cache, usar lista vacía en lugar de mostrar página de configuración
+    if not clausulazos_data_cache:
+        players_to_display = []
+        owners = []
+    else:
+        players_to_display = list(clausulazos_data_cache)
+        # Get unique owners for the filter checklist
+        owners = sorted(list(set(p['owner'] for p in players_to_display if 'owner' in p)))
 
-    # Get unique owners for the filter checklist
-    owners = sorted(list(set(p['owner'] for p in players_to_display if 'owner' in p)))
-
+    # Mapeo de criterios de ordenación
     key_map = {
         'time_remaining_asc': ('time_remaining_seconds', False),
+        'time_remaining_desc': ('time_remaining_seconds', True),
         'buyout_clause_desc': ('buyout_clause', True),
         'buyout_clause_asc': ('buyout_clause', False),
         'position_asc': ('position_id', False),
-        'position_desc': ('position_id', True)
+        'position_desc': ('position_id', True),
+        'market_value_desc': ('market_value', True),
+        'market_value_asc': ('market_value', False),
+        'market_trend_desc': ('market_value_trend', True),
+        'market_trend_asc': ('market_value_trend', False),
+        'name_asc': ('name', False),
+        'name_desc': ('name', True),
+        'team_asc': ('team_name', False),
+        'team_desc': ('team_name', True),
+        'owner_asc': ('owner', False),
+        'owner_desc': ('owner', True)
     }
 
-    sort_key, reverse = key_map.get(sort_by, ('time_remaining_seconds', False))
-    players_to_display.sort(key=lambda p: p.get(sort_key) or float('inf'), reverse=reverse)
+    # Aplicar ordenación múltiple
+    for sort_by in reversed(sort_criteria):  # Aplicar en orden inverso para prioridad correcta
+        sort_key, reverse = key_map.get(sort_by, ('time_remaining_seconds', False))
+        players_to_display.sort(key=lambda p: p.get(sort_key) or float('inf'), reverse=reverse)
     
-    return render_template('clausulazos.html', players=players_to_display, sort_by=sort_by, owners=owners)
+    return render_template('clausulazos.html', players=players_to_display, sort_by=sort_criteria, owners=owners)
 
 @app.route('/my_team')
 def my_team_page():
